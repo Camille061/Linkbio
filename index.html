@@ -1,0 +1,504 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Link Bio</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon: #ff2d78;
+    --cyan: #00f5ff;
+    --gold: #ffd700;
+    --glass: rgba(255,255,255,0.07);
+    --blur: blur(18px);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    background: #000;
+  }
+
+  /* ─── VIDEO BG ─── */
+  #bg-video {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    filter: brightness(0.55) saturate(1.3);
+  }
+
+  /* placeholder gradient when no video */
+  .bg-placeholder {
+    position: fixed; inset: 0;
+    z-index: 0;
+    background: linear-gradient(135deg,#0f0028 0%,#1a0040 30%,#00111a 65%,#001a10 100%);
+    animation: bgShift 12s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift {
+    0%   { filter: hue-rotate(0deg) brightness(1); }
+    100% { filter: hue-rotate(40deg) brightness(1.2); }
+  }
+
+  /* noise grain */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 1;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+  }
+
+  /* ─── SOUND BAR ─── */
+  .sound-bar {
+    position: fixed; top: 18px; right: 18px;
+    z-index: 100;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: var(--blur);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 50px;
+    padding: 8px 16px;
+    transition: all .3s;
+  }
+
+  .sound-bar:hover { border-color: var(--cyan); }
+
+  /* mute toggle */
+  #mute-btn {
+    background: none; border: none; cursor: pointer;
+    color: #fff; font-size: 18px;
+    display: flex; align-items: center;
+    transition: color .2s;
+  }
+  #mute-btn:hover { color: var(--neon); }
+
+  /* volume slider */
+  #vol-slider {
+    -webkit-appearance: none;
+    width: 80px; height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 99px; outline: none; cursor: pointer;
+    transition: width .3s;
+  }
+  #vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    cursor: pointer;
+  }
+
+  /* eq bars animation */
+  .eq {
+    display: flex; align-items: flex-end; gap: 2px; height: 18px;
+  }
+  .eq span {
+    display: block; width: 3px; border-radius: 2px;
+    background: var(--cyan);
+    animation: eq 0.8s ease-in-out infinite alternate;
+  }
+  .eq span:nth-child(1) { height: 6px;  animation-delay: 0s;    }
+  .eq span:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+  .eq span:nth-child(3) { height: 10px; animation-delay: 0.3s;  }
+  .eq span:nth-child(4) { height: 16px; animation-delay: 0.45s; }
+  .eq span:nth-child(5) { height: 8px;  animation-delay: 0.6s;  }
+  @keyframes eq {
+    0%   { transform: scaleY(0.3); opacity: .6; }
+    100% { transform: scaleY(1);   opacity: 1;  }
+  }
+  .eq.paused span { animation-play-state: paused; }
+
+  /* ─── VIDEO UPLOAD HINT ─── */
+  .upload-hint {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: var(--blur);
+    border: 1px dashed rgba(255,255,255,0.2);
+    border-radius: 50px;
+    padding: 9px 20px;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .3s;
+  }
+  .upload-hint:hover { border-color: var(--neon); color: #fff; }
+  .upload-hint label { cursor: pointer; }
+  #file-input { display: none; }
+
+  /* ─── MAIN CARD ─── */
+  .page {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 40px 20px 100px;
+  }
+
+  /* avatar */
+  .avatar-wrap {
+    position: relative; margin-bottom: 18px;
+    animation: floatAvatar 4s ease-in-out infinite;
+  }
+  @keyframes floatAvatar {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+
+  .avatar-ring {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon), var(--cyan), var(--gold));
+    padding: 3px;
+    box-shadow: 0 0 32px rgba(255,45,120,.5), 0 0 64px rgba(0,245,255,.2);
+    animation: ringRotate 4s linear infinite;
+  }
+  @keyframes ringRotate {
+    to { filter: hue-rotate(360deg); }
+  }
+
+  .avatar-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: #111;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 46px;
+    overflow: hidden;
+  }
+
+  /* name */
+  .name {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(26px, 7vw, 40px);
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #fff;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 0 0 30px rgba(255,45,120,.5);
+  }
+  .name span {
+    background: linear-gradient(90deg, var(--neon), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .handle {
+    margin-top: 6px;
+    font-size: 14px; color: rgba(255,255,255,0.5);
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  /* bio */
+  .bio {
+    margin: 16px 0 28px;
+    max-width: 300px;
+    text-align: center;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.7;
+    background: var(--glass);
+    backdrop-filter: var(--blur);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 14px 20px;
+  }
+
+  /* ─── LINKS ─── */
+  .links {
+    width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .link-btn {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px;
+    border-radius: 16px;
+    background: var(--glass);
+    backdrop-filter: var(--blur);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px; font-weight: 600;
+    position: relative; overflow: hidden;
+    transition: transform .25s, box-shadow .25s, border-color .25s;
+    cursor: pointer;
+    animation: slideIn .5s both;
+  }
+
+  .link-btn:nth-child(1) { animation-delay:.1s }
+  .link-btn:nth-child(2) { animation-delay:.18s }
+  .link-btn:nth-child(3) { animation-delay:.26s }
+  .link-btn:nth-child(4) { animation-delay:.34s }
+  .link-btn:nth-child(5) { animation-delay:.42s }
+
+  @keyframes slideIn {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .link-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity .3s;
+    border-radius: inherit;
+  }
+  .link-btn:hover::before { opacity: 1; }
+  .link-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 40px -8px rgba(0,0,0,.5);
+  }
+  .link-btn:active { transform: scale(0.97); }
+
+  /* per-platform colors */
+  .fb::before   { background: linear-gradient(135deg,rgba(24,119,242,.25),rgba(24,119,242,.05)); }
+  .fb:hover     { border-color: #1877f2; box-shadow: 0 8px 32px rgba(24,119,242,.35); }
+
+  .discord::before { background: linear-gradient(135deg,rgba(88,101,242,.25),rgba(88,101,242,.05)); }
+  .discord:hover   { border-color: #5865f2; box-shadow: 0 8px 32px rgba(88,101,242,.35); }
+
+  .ig::before   { background: linear-gradient(135deg,rgba(225,48,108,.25),rgba(253,152,3,.1)); }
+  .ig:hover     { border-color: #e1306c; box-shadow: 0 8px 32px rgba(225,48,108,.35); }
+
+  .line::before { background: linear-gradient(135deg,rgba(0,185,0,.25),rgba(0,185,0,.05)); }
+  .line:hover   { border-color: #06c755; box-shadow: 0 8px 32px rgba(6,199,85,.35); }
+
+  .tt::before   { background: linear-gradient(135deg,rgba(255,0,80,.2),rgba(0,242,234,.1)); }
+  .tt:hover     { border-color: #ff0050; box-shadow: 0 8px 32px rgba(255,0,80,.3); }
+
+  /* icon circle */
+  .icon-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .link-label { flex: 1; }
+  .link-label small {
+    display: block; font-size: 11px; font-weight: 400;
+    color: rgba(255,255,255,0.4); margin-top: 1px;
+  }
+
+  .link-arrow {
+    font-size: 18px; color: rgba(255,255,255,0.3);
+    transition: color .2s, transform .2s;
+  }
+  .link-btn:hover .link-arrow {
+    color: #fff; transform: translateX(4px);
+  }
+
+  /* footer */
+  .footer {
+    margin-top: 36px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ─── GLITCH on name hover ─── */
+  .name:hover {
+    animation: glitch .4s steps(2) 2;
+  }
+  @keyframes glitch {
+    0%   { text-shadow: 2px 0 var(--neon), -2px 0 var(--cyan); }
+    25%  { text-shadow: -2px 0 var(--neon), 2px 0 var(--cyan); clip-path: inset(20% 0 60% 0); }
+    50%  { text-shadow: 2px 2px var(--gold), -2px -2px var(--neon); }
+    75%  { text-shadow: none; clip-path: inset(60% 0 20% 0); }
+    100% { text-shadow: 0 0 30px rgba(255,45,120,.5); clip-path: none; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- BG placeholder (shows when no video) -->
+<div class="bg-placeholder" id="bg-placeholder"></div>
+
+<!-- VIDEO (hidden until user picks file) -->
+<video id="bg-video" autoplay muted loop playsinline style="display:none;"></video>
+
+<!-- ═══ SOUND BAR ═══ -->
+<div class="sound-bar">
+  <div class="eq" id="eq-bars">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <button id="mute-btn" title="Mute / Unmute">🔊</button>
+  <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.6">
+</div>
+
+<!-- ═══ UPLOAD VIDEO HINT ═══ -->
+<div class="upload-hint">
+  <label for="file-input">🎬 เลือกวิดีโอพื้นหลัง</label>
+  <input type="file" id="file-input" accept="video/*">
+</div>
+
+<!-- ═══ MAIN PAGE ═══ -->
+<div class="page">
+
+  <!-- Avatar -->
+  <div class="avatar-wrap">
+    <div class="avatar-ring">
+      <div class="avatar-inner">🌸</div>
+
+    </div>
+  </div>
+
+  <!-- Name -->
+  <div class="name">Nay<span>Earth</span></div>
+  <div class="handle">@ Ratthaphum saengkampan</div>
+
+  <!-- Bio -->
+  <div class="bio">
+    ชอบนอน | ชอบฟังเพลง 🎵<br>
+  
+  </div>
+
+  <!-- Links -->
+  <div class="links">
+
+    <!-- Fackbook -->
+    <a href="https://www.facebook.com/share/1G6wQAMBcf/" class="link-btn fb">
+      <div class="icon-circle">
+        <svg width="20" height="20" fill="#1877f2" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </div>
+      <div class="link-label">Facebook <small>แอดเพื่อน</small></div>
+      <span class="link-arrow">›</span>
+    </a>
+
+    <!-- Discord -->
+    <a href="https://discord.gg/2uUpPqC7" class="link-btn discord">
+      <div class="icon-circle">
+        <svg width="20" height="20" fill="#5865f2" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </div>
+      <div class="link-label">Discord <small>แอดดเพื่อนดิสคอร์ด</small></div>
+      <span class="link-arrow">›</span>
+    </a>
+
+    <!-- IG -->
+    <a href="https://www.instagram.com/salomon12hf?igsh=dTR5MDVqdzQ3ajJu" class="link-btn ig">
+      <div class="icon-circle">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="url(#ig-grad)" stroke-width="2">
+          <defs>
+            <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#f09433"/>
+              <stop offset="50%" stop-color="#e1306c"/>
+              <stop offset="100%" stop-color="#833ab4"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="#e1306c" stroke="none"/>
+        </svg>
+      </div>
+      <div class="link-label">Instagram <small>ฟอลไอจี</small></div>
+      <span class="link-arrow">›</span>
+    </a>
+
+    <!-- Line -->
+    <a href="https://line.me/ti/p/srn1dd6kvx" class="link-btn line">
+      <div class="icon-circle">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#06c755"><path d="M19.952 10.876c0-4.629-4.637-8.396-10.337-8.396S-.722 6.247-.722 10.876c0 4.148 3.68 7.625 8.652 8.284.337.073.796.222.912.51.104.261.068.671.033.936l-.147.885c-.045.263-.207 1.028.9.561 1.108-.467 5.98-3.521 8.162-6.028 1.506-1.652 2.162-3.33 2.162-5.148z"/><path d="M10.15 8.86H9.23a.234.234 0 0 0-.234.234v3.548c0 .13.104.234.234.234h.919a.234.234 0 0 0 .234-.234V9.094a.234.234 0 0 0-.234-.234zm4.14 0h-.919a.234.234 0 0 0-.234.234v2.11l-1.627-2.2a.235.235 0 0 0-.188-.144h-.955a.234.234 0 0 0-.234.234v3.548c0 .13.105.234.234.234h.919a.234.234 0 0 0 .234-.234v-2.11l1.629 2.202a.235.235 0 0 0 .186.142h.955a.234.234 0 0 0 .234-.234V9.094a.234.234 0 0 0-.234-.234zm-6.347 0H6.893a.234.234 0 0 0-.234.234v3.548c0 .13.104.234.234.234h3.051a.234.234 0 0 0 .234-.234v-.919a.234.234 0 0 0-.234-.234H7.827v-.497h1.117a.234.234 0 0 0 .234-.234v-.919a.234.234 0 0 0-.234-.234H7.827v-.497h1.117a.234.234 0 0 0 .234-.234v-.919a.234.234 0 0 0-.234-.234zm10.126 2.413H16.95v-2.18a.234.234 0 0 0-.234-.234h-.919a.234.234 0 0 0-.234.234v3.548c0 .13.104.234.234.234h3.272a.234.234 0 0 0 .234-.234v-.918a.234.234 0 0 0-.234-.234z" fill="#fff"/></svg>
+      </div>
+      <div class="link-label">LINE <small>เพิ่มเป็นเพื่อน</small></div>
+      <span class="link-arrow">›</span>
+    </a>
+
+    <!-- Tiktok -->
+    <a href="#" class="link-btn tt">
+      <div class="icon-circle">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.3 6.3 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.22 8.22 0 0 0 4.81 1.54V6.78a4.85 4.85 0 0 1-1.04-.09z"/></svg>
+      </div>
+      <div class="link-label">TikTok <small>ดูคลิปของฉัน</small></div>
+      <span class="link-arrow">›</span>
+    </a>
+
+  </div>
+
+  <div class="footer">made with 💜 · Ratthaphum</div>
+</div>
+
+<script>
+  /* ── VIDEO UPLOAD ── */
+  const fileInput   = document.getElementById('file-input');
+  const bgVideo     = document.getElementById('bg-video');
+  const bgPlaceholder = document.getElementById('bg-placeholder');
+  const muteBtn     = document.getElementById('mute-btn');
+  const volSlider   = document.getElementById('vol-slider');
+  const eqBars      = document.getElementById('eq-bars');
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    bgVideo.src = url;
+    bgVideo.style.display = 'block';
+    bgPlaceholder.style.display = 'none';
+    bgVideo.volume = parseFloat(volSlider.value);
+    bgVideo.muted = false;
+    bgVideo.play();
+    updateSound();
+  });
+
+  /* ── VOLUME / MUTE ── */
+  function updateSound() {
+    const muted = bgVideo.muted || bgVideo.volume === 0;
+    muteBtn.textContent = muted ? '🔇' : bgVideo.volume < 0.4 ? '🔉' : '🔊';
+    eqBars.classList.toggle('paused', muted);
+  }
+
+  muteBtn.addEventListener('click', () => {
+    if (bgVideo.src) {
+      bgVideo.muted = !bgVideo.muted;
+    }
+    updateSound();
+  });
+
+  volSlider.addEventListener('input', () => {
+    const v = parseFloat(volSlider.value);
+    if (bgVideo.src) {
+      bgVideo.volume = v;
+      bgVideo.muted = v === 0;
+    }
+    updateSound();
+  });
+
+  /* ── LINK RIPPLE ── */
+  document.querySelectorAll('.link-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const r = document.createElement('span');
+      const rect = this.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 1.4;
+      r.style.cssText = `
+        position:absolute; border-radius:50%;
+        width:${size}px; height:${size}px;
+        left:${e.clientX - rect.left - size/2}px;
+        top:${e.clientY - rect.top - size/2}px;
+        background:rgba(255,255,255,0.12);
+        transform:scale(0); animation:ripple .5s ease-out forwards;
+        pointer-events:none;
+      `;
+      this.appendChild(r);
+      setTimeout(() => r.remove(), 600);
+    });
+  });
+
+  const style = document.createElement('style');
+  style.textContent = `@keyframes ripple{to{transform:scale(1);opacity:0}}`;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
