@@ -670,23 +670,15 @@ let currentType = 'image'; // 'image' | 'video'
 let pendingSrc  = null;    // holds base64 before apply
 
 /* ══════════════════════════════════
-   LOAD SAVED BACKGROUND ON START
+   LOAD BACKGROUND ON START
 ══════════════════════════════════ */
 (function loadSavedBg() {
-  const savedType = localStorage.getItem(STORAGE_KEY_TYPE);
-  const savedSrc  = localStorage.getItem(STORAGE_KEY_SRC);
-  const savedMuted = localStorage.getItem(STORAGE_KEY_MUTED);
   const savedVol   = localStorage.getItem(STORAGE_KEY_VOL);
+  const savedMuted = localStorage.getItem(STORAGE_KEY_MUTED);
 
   if (savedVol !== null) volSlider.value = savedVol;
 
-  // ถ้ามีที่เซฟไว้ใช้อันนั้น ไม่งั้นใช้ default video
-  const defaultSrc  = 'https://files.catbox.moe/zy30xv.mp4';
-  const defaultType = 'video';
-  const src  = savedSrc || defaultSrc;
-  const type = savedSrc ? (savedType || 'image') : defaultType;
-
-  applyBackground(type, src, false);
+  applyBackground('video', 'https://files.catbox.moe/zy30xv.mp4', false);
 
   if (savedMuted === 'true') {
     bgVideo.muted = true;
