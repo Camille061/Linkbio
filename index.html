@@ -680,9 +680,13 @@ let pendingSrc  = null;    // holds base64 before apply
 
   if (savedVol !== null) volSlider.value = savedVol;
 
-  if (savedSrc) {
-    applyBackground(savedType || 'image', savedSrc, false);
-  }
+  // ถ้ามีที่เซฟไว้ใช้อันนั้น ไม่งั้นใช้ default video
+  const defaultSrc  = 'https://files.catbox.moe/zy30xv.mp4';
+  const defaultType = 'video';
+  const src  = savedSrc || defaultSrc;
+  const type = savedSrc ? (savedType || 'image') : defaultType;
+
+  applyBackground(type, src, false);
 
   if (savedMuted === 'true') {
     bgVideo.muted = true;
