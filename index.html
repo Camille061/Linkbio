@@ -205,7 +205,15 @@
     padding: 14px 20px;
   }
 
-  
+  #bg-video{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
   /* ─── LINKS ─── */
   .links {
     width: 100%; max-width: 360px;
@@ -320,9 +328,9 @@
 </head>
 <body>
 
-    <video id="bg-video" autoplay muted loop playsinline>
+<video id="bg-video" autoplay loop playsinline>
   <source src="https://files.catbox.moe/zy30xv.mp4" type="video/mp4">
-</video>
+</video>    
 <!-- BG placeholder (shows when no video) -->
 <div class="bg-placeholder" id="bg-placeholder"></div>
 
@@ -430,6 +438,12 @@
 </div>
 
 <script>
+    const video = document.getElementById('bg-video');
+
+document.body.addEventListener('click', () => {
+  video.muted = false;
+  video.volume = 1;
+});
   /* ── VIDEO UPLOAD ── */
   const fileInput   = document.getElementById('file-input');
   const bgVideo     = document.getElementById('bg-video');
